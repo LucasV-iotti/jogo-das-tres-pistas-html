@@ -329,25 +329,13 @@
 
         <!-- Seleção de Missões -->
         <div class="screen" id="missionSelect">
-            <h1>Selecione sua Missão</h1>
+            <h1>Sua Missão Está Pronta</h1>
             <div class="mission-grid">
                 <div class="mission-card" onclick="selectMission(0)">
-                    <div style="color: #ffd700; font-weight: bold; margin-bottom: 10px;">Vídeo 1</div>
-                    <h3>🌍 Missão - Mundo Over</h3>
-                    <p>3 Desafios</p>
-                    <p>Explore os conceitos fundamentais</p>
-                </div>
-                <div class="mission-card" onclick="selectMission(1)">
-                    <div style="color: #ffd700; font-weight: bold; margin-bottom: 10px;">Vídeo 2</div>
-                    <h3>🌌 Universo da Recuperação</h3>
-                    <p>5 Desafios</p>
-                    <p>Domine as fases do atraso</p>
-                </div>
-                <div class="mission-card" onclick="selectMission(2)">
-                    <div style="color: #ffd700; font-weight: bold; margin-bottom: 10px;">Vídeo 3</div>
-                    <h3>👨‍🚀 Agente do Mundo Quebra</h3>
-                    <p>4 Desafios</p>
-                    <p>Torne-se um especialista</p>
+                    <div style="color: #ffd700; font-weight: bold; margin-bottom: 10px;">Treinamento PF</div>
+                    <h3>🌍 Missão - Mundo Over PF</h3>
+                    <p>6 Desafios</p>
+                    <p>Domine os conceitos da recuperação intensiva</p>
                 </div>
             </div>
         </div>
@@ -404,125 +392,61 @@
         // Dados do jogo
         const missions = [
             {
-                name: "🌍 Missão - Mundo Over",
+                name: "🌍 Missão - Mundo Over PF",
                 challenges: [
                     {
-                        title: "Desafio 1: Qual é o conceito?",
+                        title: "Desafio 1: Qual é o setor responsável pela recuperação intensiva?",
                         hints: [
-                            "Sou como uma sala de cirurgia no mundo da recuperação financeira.",
-                            "Negócio produtos com mais de 90 dias de atraso — mas posso agir antes disso também.",
+                            "Sou como uma sala de cirurgia no mundo financeiro.",
+                            "Negócio produtos com mais de 90 dias de atraso, mas posso agir antes disso também.",
                             "Quando entro em ação, os limites são cancelados e o foco é total na recuperação."
                         ],
                         answer: "mundo over"
                     },
                     {
-                        title: "Desafio 2: Que tipo de migração é essa?",
+                        title: "Desafio 2: Que estratégia permite agir antes dos 90 dias?",
                         hints: [
-                            "Sou uma estratégia que permite agir antes dos 90 dias de atraso.",
+                            "Sou uma forma de migrar produtos ainda na fase preventiva para o tratamento intensivo.",
                             "Posso ser aplicada a cartões, contas correntes e empréstimos sem garantia.",
-                            "Trago benefícios como menores taxas, mas cancelo limites."
+                            "Trago benefícios como menores taxas, mas cancelo todos os limites."
                         ],
                         answer: "antecipação"
                     },
                     {
-                        title: "Desafio 3: Qual é a diferença?",
+                        title: "Desafio 3: Qual é o estágio preventivo da recuperação?",
                         hints: [
                             "Sou comparado a um check-up médico.",
                             "Atuo até os 89 dias de atraso, mantendo o relacionamento com o cliente.",
-                            "Sou o estágio anterior ao tratamento intensivo."
+                            "Sou o estágio anterior ao Mundo Over."
                         ],
                         answer: "origem"
-                    }
-                ]
-            },
-            {
-                name: "🌌 Universo da Recuperação",
-                challenges: [
-                    {
-                        title: "Desafio 1: Qual é a fase do atraso?",
-                        hints: [
-                            "O cliente atrasou, mas o acordo ainda está ativo.",
-                            "Minha missão é cobrar a parcela e manter o acordo vivo.",
-                            "Atuo entre 01 e 41 dias de atraso."
-                        ],
-                        answer: "pré-quebra"
                     },
                     {
-                        title: "Desafio 2: Qual é a fase do atraso?",
+                        title: "Desafio 4: Quais produtos podem ser negociados no Over?",
                         hints: [
-                            "O atraso já impactou o banco, mas ainda dá para salvar o acordo.",
-                            "Minha missão é evitar que o cliente perca os benefícios.",
-                            "Atuo entre 42 e 89 dias de atraso."
+                            "Incluo faturas de cartão, limites de conta corrente e empréstimos.",
+                            "Também negocio veículos com mais de 92 dias de atraso.",
+                            "Sou o foco principal das estratégias de recuperação."
                         ],
-                        answer: "quebra automática"
+                        answer: "cartão, conta corrente, empréstimos e veículos"
                     },
                     {
-                        title: "Desafio 3: Qual é a fase do atraso?",
+                        title: "Desafio 5: Quais filas são proibidas na negociação?",
                         hints: [
-                            "O sistema já encerrou o acordo por falta de pagamento.",
-                            "Minha missão é criar um novo acordo com base na situação atual do cliente.",
-                            "Atuo em casos com 90+ dias de atraso."
+                            "Sou como áreas restritas em um jogo.",
+                            "Incluo ações jurídicas e casos de alto risco.",
+                            "Não posso ser negociado no Mundo Over."
                         ],
-                        answer: "quebra sistêmica"
+                        answer: "fila p acima de 100k, fila j, fila r e s35"
                     },
                     {
-                        title: "Desafio 4: Qual é a fase do atraso?",
+                        title: "Desafio 6: Para onde vão os casos que voltam a atrasar após o acordo?",
                         hints: [
-                            "O cliente não consegue mais pagar o acordo atual.",
-                            "Minha missão é interromper o acordo e criar um novo no mesmo dia.",
-                            "Não tenho prazo definido."
+                            "Sou um universo com regras próprias.",
+                            "Recebo os casos que voltam a atrasar após negociação no Over.",
+                            "Aqui, você começa uma nova missão como agente da recuperação."
                         ],
-                        answer: "interrupção manual"
-                    },
-                    {
-                        title: "Desafio 5: Qual é o conceito?",
-                        hints: [
-                            "Sou como um código secreto no universo da recuperação.",
-                            "Registro o compromisso do cliente de pagar a parcela em atraso dentro do prazo permitido.",
-                            "Meu prazo é chamado de D+1 dia útil."
-                        ],
-                        answer: "promessa de pagamento"
-                    }
-                ]
-            },
-            {
-                name: "👨‍🚀 Agente do Mundo Quebra",
-                challenges: [
-                    {
-                        title: "Desafio 1 – O Início da Investigação",
-                        hints: [
-                            "Você age como um detetive de negociações.",
-                            "Verifica se há recadastro, fila de atuação ou comunicado de oferta.",
-                            "Se a conta estiver cancelada ou bloqueada, a proposta muda de formato."
-                        ],
-                        answer: "verificação inicial"
-                    },
-                    {
-                        title: "Desafio 2 – O Raio-X do Acordo",
-                        hints: [
-                            "Você analisa o canal de contratação e a forma de pagamento.",
-                            "Avalia quantas parcelas foram pagas e o valor negociado.",
-                            "Usa essas informações para adaptar a abordagem ao cliente."
-                        ],
-                        answer: "consulta do acordo vigente"
-                    },
-                    {
-                        title: "Desafio 3 – O Retorno ao Mundo Over",
-                        hints: [
-                            "O cliente está na base de recadastro.",
-                            "O acordo anterior é cancelado e um novo é criado.",
-                            "As novas condições não podem ser mais vantajosas que as anteriores."
-                        ],
-                        answer: "recadastro de acordo"
-                    },
-                    {
-                        title: "Desafio 4 – O Código da Alçada",
-                        hints: [
-                            "A entrada é obrigatória, exceto em campanhas.",
-                            "O cliente tem até D+9 dias corridos para pagar a entrada.",
-                            "Entre a entrada e a 1ª parcela, deve haver pelo menos 16 dias corridos."
-                        ],
-                        answer: "alçada de pagamento para recadastro"
+                        answer: "mundo quebra"
                     }
                 ]
             }
@@ -746,5 +670,4 @@
         createStars();
     </script>
 </body>
-
 </html>
