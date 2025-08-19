@@ -386,13 +386,40 @@
             border: 2px solid #ffd700;
         }
 
-        #certificateCanvas {
-            max-width: 100%;
-            height: auto;
-            border: 3px solid #d4af37;
-            border-radius: 10px;
-            margin: 20px 0;
+        .notification {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 1001;
+            max-width: 300px;
+            animation: slideInRight 0.3s ease-out;
         }
+
+        .notification.success {
+            background: rgba(0, 128, 0, 0.9);
+            border: 2px solid #00ff00;
+        }
+
+        .notification.error {
+            background: rgba(255, 0, 0, 0.9);
+            border: 2px solid #ff0000;
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideOutRight {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100%); }
+        }
+
+        @media (max-width: 768px) {
             .container {
                 padding: 10px;
             }
@@ -426,7 +453,7 @@
             
             <div class="input-group">
                 <label for="playerCPF">CPF:</label>
-                <input type="text" id="playerCPF" placeholder="Digite seu CPF">
+                <input type="text" id="playerCPF" placeholder="Digite seu CPF" maxlength="14">
             </div>
             
             <button class="btn" onclick="startGame()">Iniciar Missão</button>
@@ -533,7 +560,10 @@
     </div>
 
     <script>
-        // Configuração do Supabase - SUBSTITUA PELAS SUAS CREDENCIAIS
+        // ====================================
+        // CONFIGURAÇÃO DO SUPABASE
+        // ====================================
+        // SUBSTITUA PELOS SEUS VALORES REAIS
         const SUPABASE_URL = 'https://tzpabhwwkzsaaftpyuqd.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR6cGFiaHd3a3pzYWFmdHB5dXFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2Njk2NjMsImV4cCI6MjA3MDI0NTY2M30.2W8ax4GAPTknZE-Uxc3lgKissPO5pATp4PS09NGQamg';
         
@@ -541,36 +571,53 @@
         let supabase = null;
         let isSupabaseConnected = false;
         
-        // Tentar conectar ao Supabase
-        if (SUPABASE_URL !== 'https://tzpabhwwkzsaaftpyuqd.supabase.co' && SUPABASE_ANON_KEY !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR6cGFiaHd3a3pzYWFmdHB5dXFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2Njk2NjMsImV4cCI6MjA3MDI0NTY2M30.2W8ax4GAPTknZE-Uxc3lgKissPO5pATp4PS09NGQamg') {
+        // Tentativa de conexão
+        if (SUPABASE_URL && SUPABASE_ANON_KEY) {
             try {
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 testConnection();
             } catch (error) {
                 console.error('Erro ao conectar:', error);
-                updateConnectionStatus(false);
+                updateConnectionStatus(false, 'Erro na inicialização');
             }
         } else {
             updateConnectionStatus(false, 'Credenciais não configuradas');
         }
 
-        // Testar conexão simples
+        // ====================================
+        // FUNÇÕES DE CONEXÃO
+        // ====================================
+        
+        // Testar conexão com o Supabase
         async function testConnection() {
+            if (!supabase) {
+                updateConnectionStatus(false, 'Cliente não inicializado');
+                return;
+            }
+
             try {
+                // Teste simples: tenta fazer uma consulta básica
                 const { data, error } = await supabase
                     .from('quiz_results')
-                    .select('count')
+                    .select('id')
                     .limit(1);
+                
+                if (error) {
+                    throw error;
+                }
                 
                 updateConnectionStatus(true);
                 isSupabaseConnected = true;
+                console.log('✅ Supabase conectado com sucesso');
+                
             } catch (error) {
-                updateConnectionStatus(false);
+                console.error('❌ Erro ao testar conexão:', error);
+                updateConnectionStatus(false, error.message);
                 isSupabaseConnected = false;
             }
         }
 
-        // Atualizar status visual
+        // Atualizar status visual da conexão
         function updateConnectionStatus(connected, message = '') {
             const statusElement = document.getElementById('connectionStatus');
             
@@ -579,11 +626,28 @@
                 statusElement.innerHTML = '✅ Conectado';
             } else {
                 statusElement.className = 'connection-status disconnected';
-                statusElement.innerHTML = `❌ ${message || 'Desconectado'}`;
+                const errorMsg = message ? `: ${message}` : '';
+                statusElement.innerHTML = `❌ Offline${errorMsg}`;
             }
         }
 
-        // Dados do jogo
+        // Mostrar notificações
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // ====================================
+        // DADOS DO JOGO
+        // ====================================
         const missions = [
             {
                 name: "🌍 Missão - Mundo Over PF",
@@ -646,7 +710,9 @@
             }
         ];
 
-        // Variáveis do jogo
+        // ====================================
+        // VARIÁVEIS DO JOGO
+        // ====================================
         let playerName = '';
         let playerCPF = '';
         let currentMission = 0;
@@ -660,6 +726,10 @@
         let totalHintsUsed = 0;
         let challengeDetails = [];
 
+        // ====================================
+        // FUNÇÕES DO JOGO
+        // ====================================
+        
         // Inicializar estrelas
         function createStars() {
             const starsContainer = document.getElementById('stars');
@@ -674,6 +744,20 @@
             }
         }
 
+        // Formatar CPF
+        function formatCPF(cpf) {
+            return cpf.replace(/\D/g, '')
+                     .replace(/(\d{3})(\d)/, '$1.$2')
+                     .replace(/(\d{3})(\d)/, '$1.$2')
+                     .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+        }
+
+        // Validar CPF básico
+        function isValidCPF(cpf) {
+            cpf = cpf.replace(/\D/g, '');
+            return cpf.length === 11 && /^\d{11}$/.test(cpf);
+        }
+
         // Iniciar jogo
         function startGame() {
             playerName = document.getElementById('playerName').value.trim();
@@ -681,6 +765,11 @@
             
             if (!playerName || !playerCPF) {
                 alert('Por favor, preencha todos os campos!');
+                return;
+            }
+
+            if (!isValidCPF(playerCPF)) {
+                alert('Por favor, digite um CPF válido com 11 números!');
                 return;
             }
             
@@ -696,9 +785,11 @@
             totalAttempts = 0;
             totalHintsUsed = 0;
             challengeDetails = [];
+            totalScore = 0;
             gameStartTime = new Date();
             
             document.getElementById('missionTitle').textContent = missions[currentMission].name;
+            document.getElementById('score').textContent = '0';
             loadChallenge();
             showScreen('gameScreen');
         }
@@ -720,7 +811,7 @@
             updateHintButton();
             
             // Atualizar barra de progresso
-            const progress = ((challengesCompleted) / totalChallenges) * 100;
+            const progress = (challengesCompleted / totalChallenges) * 100;
             document.getElementById('progress').style.width = progress + '%';
         }
 
@@ -774,22 +865,23 @@
             const responseTime = Math.floor((new Date() - challengeStartTime) / 1000);
             
             // Verificar se a resposta contém palavras-chave da resposta correta
-            const correctWords = correctAnswer.split(' ');
-            const userWords = userAnswer.split(' ');
+            const correctWords = correctAnswer.split(/[,\s]+/).filter(word => word.length > 2);
+            const userWords = userAnswer.split(/[,\s]+/).filter(word => word.length > 2);
             const matches = correctWords.filter(word => 
                 userWords.some(userWord => 
-                    userWord.includes(word) || word.includes(userWord)
+                    userWord.includes(word) || word.includes(userWord) || 
+                    word.includes(userWord.substring(0, 4))
                 )
             );
             
-            const isCorrect = matches.length >= Math.ceil(correctWords.length * 0.7); // 70% das palavras devem corresponder
+            const isCorrect = matches.length >= Math.ceil(correctWords.length * 0.6); // 60% das palavras devem corresponder
             
             // Registrar detalhes do desafio
             const challengeDetail = {
                 numero_desafio: currentChallenge + 1,
                 titulo_desafio: missions[currentMission].challenges[currentChallenge].title,
                 dicas_usadas: currentHints,
-                tentativas: 1, // Contamos apenas uma tentativa por desafio
+                tentativas: 1,
                 acertou: isCorrect,
                 resposta_usuario: userAnswer,
                 resposta_correta: correctAnswer,
@@ -818,6 +910,7 @@
                 document.getElementById('score').textContent = totalScore;
                 document.getElementById('nextBtn').style.display = 'inline-block';
                 document.getElementById('hintBtn').style.display = 'none';
+                document.getElementById('answerInput').disabled = true;
                 
             } else {
                 // Resposta incorreta
@@ -831,25 +924,17 @@
                     challengesCompleted++;
                     document.getElementById('nextBtn').style.display = 'inline-block';
                     document.getElementById('hintBtn').style.display = 'none';
+                    document.getElementById('answerInput').disabled = true;
                 }
             }
             
             challengeDetails.push(challengeDetail);
-        }currentHints < 3 ? 'Você pode solicitar mais pistas ou tentar novamente!' : 'A resposta correta era: ' + missions[currentMission].challenges[currentChallenge].answer}
-                    </div>
-                `;
-                
-                if (currentHints >= 3) {
-                    challengesCompleted++;
-                    document.getElementById('nextBtn').style.display = 'inline-block';
-                    document.getElementById('hintBtn').style.display = 'none';
-                }
-            }
         }
 
         // Próximo desafio
         function nextChallenge() {
             currentChallenge++;
+            document.getElementById('answerInput').disabled = false;
             
             if (currentChallenge < missions[currentMission].challenges.length) {
                 loadChallenge();
@@ -878,108 +963,63 @@
             document.getElementById('certificateScore').textContent = totalScore;
             
             // Salvar resultado no Supabase
-            await saveResultToSupabase(percentage, totalTimeMinutes);
+            const saveResult = await saveResultToSupabase(percentage, totalTimeMinutes);
+            if (saveResult.success) {
+                showNotification('Resultado salvo com sucesso!', 'success');
+            } else {
+                showNotification('Erro ao salvar resultado', 'error');
+            }
             
             showScreen('resultScreen');
         }
 
-        // Salvar resultado no Supabase (versão simplificada)
+        // ====================================
+        // FUNÇÕES DO SUPABASE
+        // ====================================
+
+        // Salvar resultado no Supabase
         async function saveResultToSupabase(percentage, totalTimeMinutes) {
             if (!supabase || !isSupabaseConnected) {
-                console.log('Supabase não conectado - resultado não salvo');
-                return;
+                console.log('⚠️ Supabase não conectado - resultado não salvo');
+                return { success: false, error: 'Não conectado' };
             }
             
             try {
+                // Validação dos dados antes de enviar
+                if (!playerName || !playerCPF) {
+                    throw new Error('Dados do jogador incompletos');
+                }
+
+                const gameData = {
+                    nome: playerName.trim(),
+                    cpf: playerCPF.replace(/\D/g, ''),
+                    pontuacao: totalScore,
+                    total_dicas_usadas: totalHintsUsed,
+                    total_tentativas: totalAttempts,
+                    tempo_total_minutos: totalTimeMinutes,
+                    percentual_acerto: percentage,
+                    missao_nome: missions[currentMission].name,
+                    data_conclusao: new Date().toISOString()
+                };
+
                 const { data, error } = await supabase
                     .from('quiz_results')
-                    .insert([
-                        {
-                            nome: playerName,
-                            cpf: playerCPF,
-                            pontuacao: totalScore,
-                            total_dicas_usadas: totalHintsUsed,
-                            total_tentativas: totalAttempts,
-                            tempo_total_minutos: totalTimeMinutes,
-                            percentual_acerto: percentage,
-                            missao_nome: missions[currentMission].name
-                        }
-                    ]);
+                    .insert([gameData]);
 
                 if (error) {
                     throw error;
                 }
 
-                console.log('✅ Resultado salvo com sucesso!');
+                console.log('✅ Resultado salvo com sucesso:', data);
+                return { success: true, data };
+
             } catch (error) {
-                console.error('❌ Erro ao salvar:', error);
+                console.error('❌ Erro ao salvar resultado:', error);
+                return { success: false, error: error.message };
             }
         }
 
-        // Download do certificado
-        async function downloadCertificate() {
-            const certificate = document.querySelector('.certificate');
-            const downloadBtn = document.getElementById('downloadBtn');
-            
-            downloadBtn.textContent = 'Gerando certificado...';
-            downloadBtn.disabled = true;
-            
-            try {
-                const canvas = await html2canvas(certificate, {
-                    backgroundColor: '#1a1a3e',
-                    scale: 2,
-                    width: certificate.offsetWidth,
-                    height: certificate.offsetHeight
-                });
-                
-                // Criar link para download
-                const link = document.createElement('a');
-                link.download = `certificado_${playerName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.png`;
-                link.href = canvas.toDataURL();
-                link.click();
-                
-            } catch (error) {
-                console.error('Erro ao gerar certificado:', error);
-                alert('Erro ao gerar certificado. Tente novamente.');
-            } finally {
-                downloadBtn.textContent = '📸 Baixar Certificado';
-                downloadBtn.disabled = false;
-            }
-        }
-
-        // Mostrar ranking
-        async function showRanking() {
-            showScreen('rankingScreen');
-            
-            if (!isSupabaseConnected) {
-                document.getElementById('rankingContainer').innerHTML = `
-                    <div style="text-align: center; color: #ff6b6b; padding: 40px;">
-                        ⚠️ Ranking indisponível<br>
-                        <small>Supabase não está conectado</small>
-                    </div>
-                `;
-                return;
-            }
-            
-            try {
-                // Carregar estatísticas gerais
-                await loadStatistics();
-                
-                // Carregar ranking
-                await loadRanking();
-                
-            } catch (error) {
-                console.error('Erro ao carregar ranking:', error);
-                document.getElementById('rankingContainer').innerHTML = `
-                    <div style="text-align: center; color: #ff6b6b; padding: 40px;">
-                        ❌ Erro ao carregar ranking<br>
-                        <small>${error.message}</small>
-                    </div>
-                `;
-            }
-        }
-
-        // Carregar estatísticas (versão simplificada)
+        // Carregar estatísticas
         async function loadStatistics() {
             try {
                 const { data, error } = await supabase
@@ -1015,7 +1055,7 @@
             }
         }
 
-        // Carregar ranking (versão simplificada)
+        // Carregar ranking
         async function loadRanking() {
             try {
                 const { data, error } = await supabase
@@ -1081,6 +1121,81 @@
             }
         }
 
+        // Mostrar ranking
+        async function showRanking() {
+            showScreen('rankingScreen');
+            
+            if (!isSupabaseConnected) {
+                document.getElementById('rankingContainer').innerHTML = `
+                    <div style="text-align: center; color: #ff6b6b; padding: 40px;">
+                        ⚠️ Ranking indisponível<br>
+                        <small>Banco de dados não está conectado</small>
+                    </div>
+                `;
+                
+                // Valores padrão para estatísticas
+                document.getElementById('totalPlayers').textContent = '0';
+                document.getElementById('avgScore').textContent = '0';
+                document.getElementById('bestScore').textContent = '0';
+                document.getElementById('avgPercentage').textContent = '0%';
+                return;
+            }
+            
+            try {
+                // Carregar estatísticas gerais
+                await loadStatistics();
+                
+                // Carregar ranking
+                await loadRanking();
+                
+            } catch (error) {
+                console.error('Erro ao carregar ranking:', error);
+                document.getElementById('rankingContainer').innerHTML = `
+                    <div style="text-align: center; color: #ff6b6b; padding: 40px;">
+                        ❌ Erro ao carregar ranking<br>
+                        <small>${error.message}</small>
+                    </div>
+                `;
+            }
+        }
+
+        // ====================================
+        // OUTRAS FUNÇÕES
+        // ====================================
+
+        // Download do certificado
+        async function downloadCertificate() {
+            const certificate = document.querySelector('.certificate');
+            const downloadBtn = document.getElementById('downloadBtn');
+            
+            downloadBtn.textContent = 'Gerando certificado...';
+            downloadBtn.disabled = true;
+            
+            try {
+                const canvas = await html2canvas(certificate, {
+                    backgroundColor: '#1a1a3e',
+                    scale: 2,
+                    width: certificate.offsetWidth,
+                    height: certificate.offsetHeight
+                });
+                
+                // Criar link para download
+                const link = document.createElement('a');
+                link.download = `certificado_${playerName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+                
+                showNotification('Certificado baixado com sucesso!', 'success');
+                
+            } catch (error) {
+                console.error('Erro ao gerar certificado:', error);
+                showNotification('Erro ao gerar certificado', 'error');
+            } finally {
+                downloadBtn.textContent = '📸 Baixar Certificado';
+                downloadBtn.disabled = false;
+            }
+        }
+
         // Reiniciar jogo
         function restartGame() {
             totalScore = 0;
@@ -1094,10 +1209,11 @@
             challengeStartTime = null;
             
             document.getElementById('score').textContent = '0';
+            document.getElementById('answerInput').disabled = false;
             showScreen('missionSelect');
         }
 
-        // Mostrar tela
+        // Mostrar tela específica
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(screen => {
                 screen.classList.remove('active');
@@ -1105,15 +1221,93 @@
             document.getElementById(screenId).classList.add('active');
         }
 
-        // Event listener para Enter
+        // ====================================
+        // EVENT LISTENERS E INICIALIZAÇÃO
+        // ====================================
+
+        // Event listener para Enter no campo de resposta
         document.getElementById('answerInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 submitAnswer();
             }
         });
 
-        // Inicializar
+        // Event listener para formatação do CPF
+        document.getElementById('playerCPF').addEventListener('input', function(e) {
+            e.target.value = formatCPF(e.target.value);
+        });
+
+        // Event listener para Enter nos campos iniciais
+        document.getElementById('playerName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('playerCPF').focus();
+            }
+        });
+
+        document.getElementById('playerCPF').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                startGame();
+            }
+        });
+
+        // Inicializar quando a página carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            createStars();
+            
+            // Tentativa de reconexão periódica se não estiver conectado
+            if (!isSupabaseConnected) {
+                setInterval(() => {
+                    if (!isSupabaseConnected && supabase) {
+                        testConnection();
+                    }
+                }, 30000); // Tenta reconectar a cada 30 segundos
+            }
+        });
+
+        // Inicializar estrelas imediatamente
         createStars();
+
+        // ====================================
+        // INSTRUÇÕES PARA CONFIGURAÇÃO
+        // ====================================
+        
+        /*
+        COMO CONFIGURAR O SUPABASE:
+        
+        1. Crie uma conta no https://supabase.com
+        2. Crie um novo projeto
+        3. Vá em Settings → API e copie:
+           - Project URL
+           - anon/public key
+        4. Substitua as variáveis SUPABASE_URL e SUPABASE_ANON_KEY no início do código
+        5. Crie a tabela 'quiz_results' com o seguinte SQL:
+        
+        CREATE TABLE quiz_results (
+            id SERIAL PRIMARY KEY,
+            nome VARCHAR(255) NOT NULL,
+            cpf VARCHAR(14) NOT NULL,
+            pontuacao INTEGER NOT NULL,
+            total_dicas_usadas INTEGER NOT NULL,
+            total_tentativas INTEGER NOT NULL,
+            tempo_total_minutos INTEGER NOT NULL,
+            percentual_acerto INTEGER NOT NULL,
+            missao_nome VARCHAR(255) NOT NULL,
+            data_conclusao TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+        
+        6. Configure as políticas RLS (se necessário):
+        
+        -- Permitir insert público
+        CREATE POLICY "Permitir insert público" ON quiz_results 
+        FOR INSERT TO anon WITH CHECK (true);
+        
+        -- Permitir select público  
+        CREATE POLICY "Permitir select público" ON quiz_results 
+        FOR SELECT TO anon USING (true);
+        
+        7. Salve e teste o jogo!
+        */
     </script>
 </body>
 </html>
