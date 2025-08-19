@@ -533,57 +533,53 @@
     </div>
 
     <script>
-        // Configuração do Supabase
-        const SUPABASE_URL = 'https://tzpabhwwkzsaaftpyuqd.supabase.co'; // Substitua pela sua URL do Supabase
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR6cGFiaHd3a3pzYWFmdHB5dXFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2Njk2NjMsImV4cCI6MjA3MDI0NTY2M30.2W8ax4GAPTknZE-Uxc3lgKissPO5pATp4PS09NGQamg'; // Substitua pela sua chave anônima
+        // Configuração do Supabase - SUBSTITUA PELAS SUAS CREDENCIAIS
+        const SUPABASE_URL = 'https://tzpabhwwkzsaaftpyuqd.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR6cGFiaHd3a3pzYWFmdHB5dXFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2Njk2NjMsImV4cCI6MjA3MDI0NTY2M30.2W8ax4GAPTknZE-Uxc3lgKissPO5pATp4PS09NGQamg';
         
-        // Inicializar cliente Supabase (só se as credenciais estiverem configuradas)
+        // Inicializar cliente Supabase
         let supabase = null;
         let isSupabaseConnected = false;
         
+        // Tentar conectar ao Supabase
         if (SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY') {
             try {
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 testConnection();
             } catch (error) {
-                console.error('Erro ao conectar com Supabase:', error);
+                console.error('Erro ao conectar:', error);
                 updateConnectionStatus(false);
             }
         } else {
-            updateConnectionStatus(false, 'Configuração pendente');
+            updateConnectionStatus(false, 'Credenciais não configuradas');
         }
 
-        // Testar conexão com Supabase
+        // Testar conexão simples
         async function testConnection() {
             try {
                 const { data, error } = await supabase
                     .from('quiz_results')
-                    .select('count(*)')
+                    .select('count')
                     .limit(1);
-                
-                if (error && error.code !== 'PGRST116') { // PGRST116 = tabela não encontrada (esperado)
-                    throw error;
-                }
                 
                 updateConnectionStatus(true);
                 isSupabaseConnected = true;
             } catch (error) {
-                console.error('Erro de conexão:', error);
-                updateConnectionStatus(false, 'Erro de conexão');
+                updateConnectionStatus(false);
                 isSupabaseConnected = false;
             }
         }
 
-        // Atualizar status de conexão na UI
+        // Atualizar status visual
         function updateConnectionStatus(connected, message = '') {
             const statusElement = document.getElementById('connectionStatus');
             
             if (connected) {
                 statusElement.className = 'connection-status connected';
-                statusElement.innerHTML = '✅ Supabase Conectado';
+                statusElement.innerHTML = '✅ Conectado';
             } else {
                 statusElement.className = 'connection-status disconnected';
-                statusElement.innerHTML = `❌ Supabase ${message || 'Desconectado'}`;
+                statusElement.innerHTML = `❌ ${message || 'Desconectado'}`;
             }
         }
 
@@ -867,12 +863,12 @@
             const totalChallenges = missions[currentMission].challenges.length;
             const maxScore = totalChallenges * 10;
             const percentage = Math.round((totalScore / maxScore) * 100);
-            const totalTimeSeconds = Math.floor((new Date() - gameStartTime) / 1000);
+            const totalTimeMinutes = Math.ceil((new Date() - gameStartTime) / 1000 / 60);
             
             document.getElementById('finalScore').innerHTML = `
                 <h2>Sua Pontuação: ${totalScore} pontos</h2>
                 <p>Desempenho: ${percentage}%</p>
-                <p>Tempo Total: ${Math.floor(totalTimeSeconds / 60)}:${(totalTimeSeconds % 60).toString().padStart(2, '0')}</p>
+                <p>Tempo Total: ${totalTimeMinutes} minutos</p>
                 <p>Total de Dicas Usadas: ${totalHintsUsed}</p>
                 <p>Total de Tentativas: ${totalAttempts}</p>
             `;
@@ -882,43 +878,41 @@
             document.getElementById('certificateScore').textContent = totalScore;
             
             // Salvar resultado no Supabase
-            if (isSupabaseConnected) {
-                try {
-                    await saveResultToSupabase(percentage, totalTimeSeconds);
-                } catch (error) {
-                    console.error('Erro ao salvar resultado:', error);
-                }
-            }
+            await saveResultToSupabase(percentage, totalTimeMinutes);
             
             showScreen('resultScreen');
         }
 
-        // Salvar resultado no Supabase
-        async function saveResultToSupabase(percentage, totalTimeSeconds) {
-            if (!supabase) return;
+        // Salvar resultado no Supabase (versão simplificada)
+        async function saveResultToSupabase(percentage, totalTimeMinutes) {
+            if (!supabase || !isSupabaseConnected) {
+                console.log('Supabase não conectado - resultado não salvo');
+                return;
+            }
             
             try {
-                const { data, error } = await supabase.rpc('inserir_resultado_quiz', {
-                    p_nome: playerName,
-                    p_cpf: playerCPF,
-                    p_pontuacao: totalScore,
-                    p_total_dicas: totalHintsUsed,
-                    p_total_tentativas: totalAttempts,
-                    p_tempo_total: totalTimeSeconds,
-                    p_percentual: percentage,
-                    p_missao: missions[currentMission].name,
-                    p_desafios_completados: challengesCompleted,
-                    p_data_inicio: gameStartTime.toISOString(),
-                    p_detalhes_desafios: challengeDetails
-                });
+                const { data, error } = await supabase
+                    .from('quiz_results')
+                    .insert([
+                        {
+                            nome: playerName,
+                            cpf: playerCPF,
+                            pontuacao: totalScore,
+                            total_dicas_usadas: totalHintsUsed,
+                            total_tentativas: totalAttempts,
+                            tempo_total_minutos: totalTimeMinutes,
+                            percentual_acerto: percentage,
+                            missao_nome: missions[currentMission].name
+                        }
+                    ]);
 
                 if (error) {
                     throw error;
                 }
 
-                console.log('Resultado salvo com sucesso!');
+                console.log('✅ Resultado salvo com sucesso!');
             } catch (error) {
-                console.error('Erro ao salvar no Supabase:', error);
+                console.error('❌ Erro ao salvar:', error);
             }
         }
 
@@ -985,20 +979,32 @@
             }
         }
 
-        // Carregar estatísticas
+        // Carregar estatísticas (versão simplificada)
         async function loadStatistics() {
             try {
                 const { data, error } = await supabase
-                    .from('estatisticas_gerais')
-                    .select('*')
-                    .single();
+                    .from('quiz_results')
+                    .select('pontuacao, percentual_acerto');
 
                 if (error) throw error;
 
-                document.getElementById('totalPlayers').textContent = data.total_jogadores || 0;
-                document.getElementById('avgScore').textContent = Math.round(data.pontuacao_media || 0);
-                document.getElementById('bestScore').textContent = data.maior_pontuacao || 0;
-                document.getElementById('avgPercentage').textContent = Math.round(data.percentual_medio || 0) + '%';
+                if (data && data.length > 0) {
+                    const totalPlayers = data.length;
+                    const avgScore = Math.round(data.reduce((acc, p) => acc + p.pontuacao, 0) / totalPlayers);
+                    const bestScore = Math.max(...data.map(p => p.pontuacao));
+                    const avgPercentage = Math.round(data.reduce((acc, p) => acc + p.percentual_acerto, 0) / totalPlayers);
+
+                    document.getElementById('totalPlayers').textContent = totalPlayers;
+                    document.getElementById('avgScore').textContent = avgScore;
+                    document.getElementById('bestScore').textContent = bestScore;
+                    document.getElementById('avgPercentage').textContent = avgPercentage + '%';
+                } else {
+                    // Valores padrão quando não há dados
+                    document.getElementById('totalPlayers').textContent = '0';
+                    document.getElementById('avgScore').textContent = '0';
+                    document.getElementById('bestScore').textContent = '0';
+                    document.getElementById('avgPercentage').textContent = '0%';
+                }
             } catch (error) {
                 console.error('Erro ao carregar estatísticas:', error);
                 // Valores padrão em caso de erro
@@ -1009,12 +1015,14 @@
             }
         }
 
-        // Carregar ranking
+        // Carregar ranking (versão simplificada)
         async function loadRanking() {
             try {
                 const { data, error } = await supabase
-                    .from('ranking_jogadores')
-                    .select('*')
+                    .from('quiz_results')
+                    .select('nome, pontuacao, percentual_acerto, total_dicas_usadas, data_conclusao')
+                    .order('pontuacao', { ascending: false })
+                    .order('percentual_acerto', { ascending: false })
                     .limit(10);
 
                 if (error) throw error;
@@ -1035,14 +1043,15 @@
                 `;
 
                 if (data && data.length > 0) {
-                    data.forEach(player => {
-                        const medal = player.posicao === 1 ? '🥇' : 
-                                     player.posicao === 2 ? '🥈' : 
-                                     player.posicao === 3 ? '🥉' : '';
+                    data.forEach((player, index) => {
+                        const position = index + 1;
+                        const medal = position === 1 ? '🥇' : 
+                                     position === 2 ? '🥈' : 
+                                     position === 3 ? '🥉' : '';
                         
                         tableHTML += `
                             <tr>
-                                <td><span class="medal">${medal}</span>${player.posicao}°</td>
+                                <td><span class="medal">${medal}</span>${position}°</td>
                                 <td>${player.nome}</td>
                                 <td>${player.pontuacao}</td>
                                 <td>${player.percentual_acerto}%</td>
@@ -1105,13 +1114,6 @@
 
         // Inicializar
         createStars();
-        
-        // Verificar conexão periodicamente
-        setInterval(() => {
-            if (supabase && !isSupabaseConnected) {
-                testConnection();
-            }
-        }, 30000); // Testa a cada 30 segundos
     </script>
 </body>
 </html>
