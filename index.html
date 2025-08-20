@@ -489,7 +489,41 @@
             
             <button class="btn" onclick="showScreen('startScreen')">Voltar</button>
         </div>
-
+<!-- Tela de Regras (adicionar após a div rankingScreen) -->
+<div class="screen" id="rulesScreen">
+    <div class="rocket">📋</div>
+    <h1>Como Funciona a Missão</h1>
+    
+    <div style="text-align: left; background: rgba(0, 0, 0, 0.5); padding: 30px; border-radius: 15px; margin: 20px 0;">
+        <h3 style="color: #4a90e2; margin-bottom: 15px;">🎯 Objetivo</h3>
+        <p style="margin-bottom: 20px;">Complete todos os desafios sobre recuperação financeira e ganhe pontos para subir no ranking!</p>
+        
+        <h3 style="color: #4a90e2; margin-bottom: 15px;">💡 Sistema de Dicas</h3>
+        <ul style="margin-bottom: 20px; line-height: 1.6;">
+            <li><strong>3 dicas por desafio:</strong> Use com sabedoria!</li>
+            <li><strong>1ª dica usada:</strong> 10 pontos se acertar</li>
+            <li><strong>2ª dica usada:</strong> 5 pontos se acertar</li>
+            <li><strong>3ª dica usada:</strong> 3 pontos se acertar</li>
+        </ul>
+        
+        <h3 style="color: #4a90e2; margin-bottom: 15px;">🏆 Pontuação</h3>
+        <ul style="margin-bottom: 20px; line-height: 1.6;">
+            <li>Quanto menos dicas usar, mais pontos ganha!</li>
+            <li>Máximo: <strong>60 pontos</strong> (6 desafios × 10 pontos)</li>
+            <li>Suas respostas não precisam ser idênticas - palavras-chave são aceitas</li>
+        </ul>
+        
+        <h3 style="color: #4a90e2; margin-bottom: 15px;">📜 Certificado</h3>
+        <p style="margin-bottom: 20px;">Ao completar todos os desafios, você receberá um certificado digital que pode baixar como imagem!</p>
+        
+        <div style="background: rgba(255, 215, 0, 0.1); border-left: 4px solid #ffd700; padding: 15px; border-radius: 5px;">
+            <strong style="color: #ffd700;">💪 Dica Estratégica:</strong> Leia cada dica com atenção antes de pedir a próxima. Às vezes uma dica é suficiente para descobrir a resposta!
+        </div>
+    </div>
+    
+    <button class="btn" onclick="showScreen('missionSelect')">🚀 Entendi! Vamos às Missões</button>
+    <button class="btn" onclick="showScreen('startScreen')" style="background: rgba(255, 255, 255, 0.1);">Voltar</button>
+</div>
         <!-- Seleção de Missões -->
         <div class="screen" id="missionSelect">
             <h1>Sua Missão Está Pronta</h1>
@@ -773,7 +807,7 @@
                 return;
             }
             
-            showScreen('missionSelect');
+            showScreen('rulesScreen');
         }
 
         // Selecionar missão
@@ -1311,3 +1345,4 @@
     </script>
 </body>
 </html>
+
